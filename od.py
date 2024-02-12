@@ -2,6 +2,10 @@ from telethon import TelegramClient
 import json, os, sys, subprocess
 from tqdm import tqdm
 
+#lib for .env
+from dotenv import load_dotenv
+load_dotenv()
+
 api_id = os.environ.get("API_ID") 
 api_hash = os.environ.get("API_HASH") 
 client = TelegramClient('anon', api_id, api_hash)
