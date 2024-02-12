@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit-Drive</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+
+        html{
+            height: 100%;
+            color: aliceblue;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        body{
+            margin: 0px;
+            height: 95%;
+            padding: 10px;
+            background-color: rgb(46, 49, 51);
+        }
+
+        .table-holder{
+            width: 80%;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: rgb(52, 59, 63);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .table-header{
+            font-size: large;
+            margin-bottom: 15px;
+        }
+
+        .table{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5;
+        }
+
+        .item{
+            border-radius: 10px;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .item:hover{
+            background-color: rgb(82, 104, 117);
+            cursor: pointer;
+        }
+
+        .folder {
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+
+            color: aliceblue;
+        }
+
+        #drop-area {
+            width: 300px;
+            height: 200px;
+            border: 2px dashed #ccc;
+            text-align: center;
+            padding: 20px;
+            margin: 20px auto;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="table-holder">
+        <div class="table-header">Orbit-Drive v1.0</div>
+        <div class="table">
+            {% for folder in folders %}
+            <a href="{{folder}}/" style="text-decoration: none;"><div class="folder item" ><i class="bi bi-folder-fill"></i> {{ folder }}</div></a>
+            {% endfor %}
+            {% for file in files %}
+                <div class="item"><i class="bi bi-file-earmark-richtext-fill"></i> {{file.file_name}}{{file.file_extension}}</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="drop-area" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+        <p>Drag & Drop files here</p>
+      </div>
+
+    <script>
+        const currentPath = window.location.pathname;
+        console.log('Current URL path:', currentPath);
+
+        function handleDrop(event) {
+            event.preventDefault();
+            
+            // Get the dropped files
+            const files = event.dataTransfer.files;
+
+            // Check if any files were dropped
+            if (files.length > 0) {
+                // Perform file upload
+                uploadFiles(files);
+            }
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+        }
+
+        function uploadFiles(files) {
+            const formData = new FormData();
+
+            // Append each file to the FormData object
+            for (const file of files) {
+                formData.append('files', file);
+            }
+
+            // Send a POST request using Fetch API
+            fetch(currentPath, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('File upload successful:', data);
+            })
+            .catch(error => {
+                console.error('Error uploading file:', error);
+            });
+        }
+
+    </script>
+</body>
+</html>
