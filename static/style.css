@@ -1,0 +1,86 @@
+html{
+    height: 100%;
+    color: aliceblue;
+    font-family: 'Courier New', Courier, monospace;
+}
+body{
+    margin: 0px;
+    height: 95%;
+    padding: 10px;
+    background-color: rgb(46, 49, 51);
+}
+
+.table-holder{
+    width: 80%;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: rgb(52, 59, 63);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.table-header{
+    font-size: large;
+    margin-bottom: 15px;
+}
+
+.table{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5;
+}
+
+.item{
+    border-radius: 10px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.item:hover{
+    background-color: rgb(82, 104, 117);
+    cursor: pointer;
+}
+
+.folder {
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+
+    color: aliceblue;
+}
+
+#drop-area {
+    width: 300px;
+    height: 200px;
+    border: 2px dashed #ccc;
+    text-align: center;
+    padding: 20px;
+    margin: 20px auto;
+}
+
+.multi-file{
+    text-decoration: none;
+    color: aliceblue;
+}
+
+.single-file{
+    text-decoration: none;
+    color: aliceblue;
+}
+
+.custom-menu {
+    display: none;
+    position: absolute;
+    background-color: #2d2e35;
+    border: 1px solid aliceblue;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    z-index: 1000;
+}
+.custom-menu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+}

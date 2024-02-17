@@ -6,81 +6,165 @@
     <title>Orbit-Drive</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-
         html{
-            height: 100%;
-            color: aliceblue;
-            font-family: 'Courier New', Courier, monospace;
-        }
-        body{
-            margin: 0px;
-            height: 95%;
-            padding: 10px;
-            background-color: rgb(46, 49, 51);
-        }
+    height: 100%;
+    color: aliceblue;
+    font-family: 'Courier New', Courier, monospace;
+}
+body{
+    margin: 0px;
+    min-height: 95%;
+    padding: 0px;
+    background-color: rgb(46, 49, 51);
+}
 
-        .table-holder{
-            width: 80%;
-            margin: auto;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background-color: rgb(52, 59, 63);
-            border-radius: 10px;
-            padding: 10px;
-        }
+.table-holder{
+    width: 80%;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: rgb(52, 59, 63);
+    border-radius: 10px;
+    padding: 10px;
+}
 
-        .table-header{
-            font-size: large;
-            margin-bottom: 15px;
-        }
+.table-header{
+    font-size: large;
+    margin-bottom: 15px;
+}
 
-        .table{
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 5;
-        }
+.table{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5;
+}
 
-        .item{
-            border-radius: 10px;
-            padding: 5px;
-            cursor: pointer;
-        }
+.item{
+    border-radius: 10px;
+    padding: 5px;
+    cursor: pointer;
+}
 
-        .item:hover{
-            background-color: rgb(82, 104, 117);
-            cursor: pointer;
-        }
+.item:hover{
+    background-color: rgb(82, 104, 117);
+    cursor: pointer;
+}
 
-        .folder {
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
+.folder {
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
 
-            color: aliceblue;
-        }
+    color: aliceblue;
+}
 
-        #drop-area {
-            width: 300px;
-            height: 200px;
-            border: 2px dashed #ccc;
-            text-align: center;
-            padding: 20px;
-            margin: 20px auto;
-        }
+#drop-area {
+    width: 300px;
+    height: 200px;
+    border: 2px dashed #ccc;
+    text-align: center;
+    padding: 20px;
+    margin: 20px auto;
+}
+
+.multi-file{
+    text-decoration: none;
+    color: aliceblue;
+}
+
+.single-file{
+    text-decoration: none;
+    color: aliceblue;
+}
+
+.custom-menu {
+    display: none;
+    position: absolute;
+    background-color: #2d2e35;
+    border: 1px solid aliceblue;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    z-index: 1000;
+}
+.custom-menu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+#customModal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #28282e;
+        color: aliceblue;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+}
+
+.menu-holder{
+    width: 100%;
+    background-color: #28282e;
+    margin-bottom: 10px;
+}
+
+.menu{
+    width: 80%;
+    margin: auto;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.menu-left{
+    flex: 1;
+    display: flex;
+    justify-content: start;
+}
+
+.menu-right{
+    flex: 1;
+    display: flex;
+    justify-content: end;
+}
 
     </style>
 </head>
 <body>
+    <div class="menu-holder">
+        <div class="menu">
+            <div class="menu-left">
+                <h2>Orbit-Drive v1.3</h2>
+            </div>
+            <div class="menu-right">
+                <i class="bi bi-folder-plus" onclick="customAction('create_folder')"></i>
+            </div>
+        </div>
+    </div>
+
     <div class="table-holder">
-        <div class="table-header">Orbit-Drive v1.0</div>
         <div class="table">
             {% for folder in folders %}
-            <a href="{{folder}}/" style="text-decoration: none;"><div class="folder item" ><i class="bi bi-folder-fill"></i> {{ folder }}</div></a>
+                <a href="{{folder}}/" style="text-decoration: none;"><div class="folder item" ><i class="bi bi-folder-fill"></i> {{ folder }}</div></a>
             {% endfor %}
             {% for file in files %}
-                <div class="item"><i class="bi bi-file-earmark-richtext-fill"></i> {{file.file_name}}{{file.file_extension}}</div>
+                <a  {% if file.type == "single" %}
+                        {% if file.file_extension == "blank"%}
+                            style="display: none;"
+                        {%else%}
+                            href="/download?file={{file.message_id}}" class="single-file"
+                        {%endif%}
+                    {%else%}
+                        href="/download?" class="multi-file" id="{{file.message_ids}}"
+                    {% endif %}
+                ><div class="item"><i class="bi bi-file-earmark-richtext-fill"></i> {{file.file_name}}{{file.file_extension}}</div></a>
             {% endfor %}
         </div>
     </div>
@@ -88,6 +172,97 @@
     <div id="drop-area" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
         <p>Drag & Drop files here</p>
       </div>
+
+      <div id="customMenu" class="custom-menu">
+        <div class="custom-menu-item" onclick="customAction('create_folder')">Create Folder</div>
+        <div class="custom-menu-item" onclick="customAction('close')">Close</div>
+        <!-- Add more menu items as needed -->
+    </div>
+
+    <div id="customMenuOverFolder" class="custom-menu">
+        <div class="custom-menu-item" onclick="customAction('create_folder')">Create Folder</div>
+        <div class="custom-menu-item" onclick="customAction('download_folder')">Download Folder</div>
+        <div class="custom-menu-item" onclick="customAction('delete_folder')">Delete Folder</div>
+        <div class="custom-menu-item" onclick="customAction('close')">Close</div>
+        <!-- Add more menu items as needed -->
+    </div>
+
+    <div id="customModal">
+        <input type="text" id="textInput" placeholder="Enter folder name">
+        <button onclick="handleInput()">Create folder</button>
+    </div>
+    
+    
+    <script>
+        function showCustomModal() {
+            var customModal = document.getElementById('customModal');
+            customModal.style.display = 'block';
+        }
+    
+        function hideCustomModal() {
+            var customModal = document.getElementById('customModal');
+            customModal.style.display = 'none';
+        }
+    
+        function handleInput() {
+            var inputValue = document.getElementById('textInput').value;
+            
+            const url = window.location.origin + "/createfolder";
+            console.log(url)
+            const path = window.location.pathname;
+
+            const data = {
+                url: path,
+                foldername: inputValue
+            };
+
+            const requestOptions = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+            };
+
+            fetch(url, requestOptions)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Response:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+            setTimeout(function() {
+                window.location.reload();
+            }, 1000);
+
+            hideCustomModal();
+        }
+    </script>
+
+    <script>
+        var multiFileDivs = document.getElementsByClassName("multi-file");
+        var multiFileArray = Array.from(multiFileDivs);
+        console.log(multiFileArray);
+
+        multiFileArray.forEach(function(element) {
+            var elementValue = element.id;
+            var arrayOfIds = JSON.parse(elementValue);
+            
+            var download_url = "/download?"
+            arrayOfIds.forEach(function(id){
+                console.log(id.toString());
+                download_url = download_url + "file=" + id.toString() + "&";
+            });
+
+            download_url = download_url.substring(0, download_url.length - 1);
+            console.log(download_url);
+            element.href = download_url;
+        });
+
+        console.log("test");
+    </script>
 
     <script>
         const currentPath = window.location.pathname;
@@ -133,5 +308,79 @@
         }
 
     </script>
+
+<script>
+
+var over_folder = false;
+var over_folder_element = null
+
+document.addEventListener('contextmenu', function (e) {
+    hideCustomMenu();
+    e.preventDefault();
+    if(over_folder){
+        showCustomMenuOverFolder(e.pageX, e.pageY);
+    }
+    else{
+        showCustomMenu(e.pageX, e.pageY);
+    }
+});
+
+document.addEventListener('click', function () {
+    hideCustomMenu();
+});
+
+document.addEventListener('mouseover', function (e) {
+    var hoveredElement = e.target;
+    if (hoveredElement.classList.contains('folder')) {
+        over_folder = true;
+        over_folder_element = hoveredElement;
+    }
+    else{
+        over_folder = false;
+        over_folder_element = null;
+    }
+});
+
+function showCustomMenu(x, y) {
+    var customMenu = document.getElementById('customMenu');
+    customMenu.style.display = 'block';
+    customMenu.style.left = x + 'px';
+    customMenu.style.top = y + 'px';
+}
+
+function showCustomMenuOverFolder(x, y) {
+    console.log(over_folder_element);
+    var customMenu = document.getElementById('customMenuOverFolder');
+    customMenu.style.display = 'block';
+    customMenu.style.left = x + 'px';
+    customMenu.style.top = y + 'px';
+}
+
+function hideCustomMenu() {
+    var customMenu = document.getElementById('customMenu');
+    customMenu.style.display = 'none';
+    var customMenuOverFolder = document.getElementById('customMenuOverFolder');
+    customMenuOverFolder.style.display = 'none';
+}
+
+function customAction(action) {
+    if (action == "close") {
+        hideCustomMenu();
+    }
+    else if (action == "create_folder") {
+        showCustomModal();
+    }
+    else if (action == "download_folder"){
+        const currentPath = window.location.pathname;
+        console.log('Current URL path:', currentPath);
+    }
+    hideCustomMenu();
+}
+
+</script>
 </body>
+
+
+
+
 </html>

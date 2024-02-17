@@ -14,8 +14,7 @@ client = TelegramClient('anon', api_id, api_hash)
 output_folder = "./downloads/"
 safe = int(os.environ.get("GROUP_CHAT_ID")) 
 
-index_file = "./odrive_sync/files_index.json"
-stats_index = "./odrive_sync/stats_index.json"
+index_file = "./files_index.json"
 
 async def upload_file(file_path):
     
@@ -30,29 +29,6 @@ async def upload_file(file_path):
         print(response)
     
     return response.id
-
-
-async def download(messid):
-    print(safe)
-    print(api_id)
-    message = await client.get_messages(safe, ids=messid)
-    file_name = "untitled"
-
-    with open(index_file, 'r') as file:
-        existing_data = json.load(file)
-
-        for f in existing_data:
-            if (f["type"] == "single"):
-                if (f["message_id"] == str(messid)):
-                    file_name = f"file_{messid}{f["file_extension"]}"
-            else:
-                print("error multi file not supported yet")
-
-    
-
-    output_path = os.path.join(output_folder, file_name)
-    if message.media:
-        await client.download_media(message.media, file=output_path)
 
 
 async def upload(file_path, file_virtual_pos):
@@ -70,6 +46,8 @@ async def upload(file_path, file_virtual_pos):
                     if(p == file_path):
                         file_exists = True
 
+        file_name, file_extension = os.path.splitext(os.path.basename(file_path))
+
         if(file_exists):
             print(f"{file_name} --- file already uploaded")
         else:
@@ -79,8 +57,6 @@ async def upload(file_path, file_virtual_pos):
 
 
             if file_size > 2 * 1024 * 1024 * 1024:
-
-                file_name, file_extension = os.path.splitext(os.path.basename(file_path))
 
                 directory = os.path.dirname(file_path)
                 compressed_file_name = file_name + file_extension
@@ -164,18 +140,28 @@ async def upload(file_path, file_virtual_pos):
     except Exception as e:
         print(f"Error: {e}")
 
-if len(sys.argv) >= 3:
-    # Access the first argument (index 1)
-    first_argument = sys.argv[1]
-    second_arg = sys.argv[2]
-    print("First argument:", first_argument)
+async def sync_folder():
 
-    if(first_argument == "down"):
-        with client:
-            client.loop.run_until_complete(download(int(second_arg)))
-    elif(first_argument == "up"):
-        with client:
-            client.loop.run_until_complete(upload(sys.argv[2],sys.argv[3]))
-else:
-    print("No arguments provided.")
+    directory_path = 'F:\Backedup'
+
+    for root, dirs, files in os.walk(directory_path):
+        for file_name in files:
+            virtual_path = "/"
+            file_path = os.path.join(root, file_name)
+            string_path = str(root)
+            string_path = string_path.replace(directory_path, "")
+            string_path = string_path.replace("\\", "/")
+            path_array= string_path.split("/")
+
+            if(len(path_array) == 1):
+                path_array = ["/"]
+                string_path = "/"
+            else:
+                virtual_path = string_path + "/"
+
+            await upload(file_path, virtual_path)
+
+
+with client:
+    client.loop.run_until_complete(sync_folder())
 

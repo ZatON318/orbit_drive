@@ -1,10 +1,38 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 import json, ast, os
 import subprocess
+import platform
+
 
 app = Flask(__name__)
-json_path = "files_index.json"
+json_path = "./odrive_sync/files_index.json"
 
+
+def get_os():
+    system = platform.system()
+    if system == "Windows":
+        return "Windows"
+    elif system == "Linux":
+        return "Linux"
+    else:
+        return "Unknown"
+
+def sync_index():
+    print(get_os())
+    if(get_os() == "Windows"):
+
+        command = f'sync_index.bat'
+        try:
+            result = subprocess.run(command, shell=True, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error: {e}")
+    else:
+
+        command = f'./sync_index.sh'
+        try:
+            subprocess.run(command, shell=True, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error: {e}")
 
 def save_files(files):
     file_paths = []
@@ -41,12 +69,12 @@ def generate_filestructure(data):
 @app.route('/<path:subpath>', methods=["GET","POST"])
 def browser(subpath):
     virtualpath = "/"+subpath
-    print(virtualpath)
+    #print(virtualpath)
 
     if request.method == 'POST':
         files = request.files.getlist('files')
         file_paths = save_files(files)
-        print(file_paths)
+        #print(file_paths)
 
         for fp in file_paths:
             command = f'py .\\od.py up {fp} {virtualpath}'
@@ -55,6 +83,8 @@ def browser(subpath):
                 subprocess.run(command, shell=True, check=True)
             except subprocess.CalledProcessError as e:
                 print(f"Error: {e}")
+
+        sync_index()
 
         return jsonify({'result': "jej"})
 
@@ -72,19 +102,14 @@ def browser(subpath):
         if(text == ''):
             splited_subpath.pop(i)
 
-    print("Splited path: " + str(splited_subpath))
 
     path_length = len(splited_subpath)
-    print("Path length: " + str(path_length))
 
     folders, splited_folders = generate_filestructure(data)
-    print(splited_folders)
-    print("Filtering folders")
     folders_to_show = []
     for folder in splited_folders:
         if path_length <= 1:
             try:
-                print(folder[0])
                 if(folder[0] == splited_subpath[0]):
                     if(folder[1] not in folders_to_show):
                         folders_to_show.append(folder[1])
@@ -92,21 +117,67 @@ def browser(subpath):
                 continue
         else:
             try:
-                print("Folder path" + str(folder[path_length-1]))
-                print("Url path" + str(splited_subpath[path_length-1]))
                 if(folder[path_length-1] == splited_subpath[path_length-1]):
                     if(folder[path_length] not in folders_to_show):
                         folders_to_show.append(folder[path_length])
             except:
                 continue
     
-    print("Folders to show: " + str(folders_to_show))
 
     return render_template('index.html', files=files, folders=folders_to_show)
 
-@app.route('/')
+# this function basicaly dont make folders, but make blank files with path to folder so it will show as empty folder
+@app.route('/createfolder', methods=["POST"])
+def createfolder():
+    if request.method == 'POST':
+        foldername = request.json['foldername']
+        path = request.json["url"]
+        print(f"creating folder {foldername}...")
+
+        virtual_path = path + foldername + "/"
+        print(virtual_path)
+
+        data = {
+                "type": "single",
+                "file_name": "blank",
+                "file_extension": "blank",
+                "client_path": "blank",
+                "message_id": "blank",
+                "virtual_pos": f"{virtual_path}"
+        }
+
+        print(data)
+
+        with open(json_path, 'r') as file:
+            existing_data = json.load(file)
+
+        existing_data.append(data)
+
+        with open(json_path, 'w') as file:
+            json.dump(existing_data, file, indent=2)
+
+        return jsonify({'result': "pixi"})
+    
+@app.route('/', methods=["GET","POST"])
 def index():
     virtualpath = "/"
+
+    if request.method == 'POST':
+        files = request.files.getlist('files')
+        file_paths = save_files(files)
+
+        for fp in file_paths:
+            command = f'py .\\od.py up {fp} {virtualpath}'
+
+            try:
+                subprocess.run(command, shell=True, check=True)
+            except subprocess.CalledProcessError as e:
+                print(f"Error: {e}")
+
+        sync_index()
+
+        return jsonify({'result': "jej"})
+    
     files = []
     with open(json_path, 'r') as json_file:
         data = json.load(json_file)
@@ -123,10 +194,48 @@ def index():
                 folders_to_show.append(folder[0])
         except:
             continue
-    
-    print(folders_to_show)
 
     return render_template('index.html', files=files, folders=folders_to_show)
 
+@app.route('/download', methods=['GET'])
+def download():
+    command = f'py .\\cleaner.py'
+    subprocess.run(command, shell=True)
+
+    files = request.args.getlist('file')
+    print(files)
+    file_extension = ""
+
+    with open(json_path, 'r') as json_file:
+        data = json.load(json_file)
+
+    for f in files:
+
+        for local_file in data:
+            if(local_file["type"] == "single"):
+                if(local_file["message_id"] == f):
+                    file_extension = local_file["file_extension"]
+
+        command = f'py .\\od.py down {f}'
+
+        result = subprocess.run(command, shell=True)
+
+        # Check if the subprocess has finished
+        if result.returncode == 0:
+            print("Subprocess completed successfully")
+            file_path = f'./downloads/file_{f}{file_extension}'
+            return send_file(file_path, as_attachment=True)
+        else:
+            print(f"Subprocess failed with exit code {result.returncode}")
+
+        return jsonify({'result': "error"})
+
+@app.route('/static/css/<path:filename>')
+def serve_css(filename):
+    return send_from_directory('static/css', filename)
+
+
+
 if __name__ == '__main__':
+    sync_index()
     app.run(debug=True)
