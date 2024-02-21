@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory, redirect
 import json, ast, os
 import subprocess
 import platform
@@ -6,7 +6,28 @@ import platform
 
 app = Flask(__name__)
 json_path = "./odrive_sync/files_index.json"
+stats_index = "./odrive_sync/stats_index.json"
 
+def convert_bytes(file_size_bytes):
+    size_units = ["Bytes", "KB", "MB", "GB", "TB"]
+    factor = 1024
+
+    index = 0
+
+    while file_size_bytes > factor and index < len(size_units) - 1:
+        file_size_bytes /= factor
+        index += 1
+
+    result = "{:.2f} {}".format(file_size_bytes, size_units[index])
+    return result
+
+def get_total_size():
+    with open(stats_index, 'r') as file:
+        data = json.load(file)
+
+    size = convert_bytes(data["total_size"])
+
+    return size
 
 def get_os():
     system = platform.system()
@@ -73,10 +94,15 @@ def browser(subpath):
 
     if request.method == 'POST':
         files = request.files.getlist('files')
+
+        for file in files:
+            print(file.filename)
+            file.filename = file.filename.replace(" ", "_")
+
         file_paths = save_files(files)
-        #print(file_paths)
 
         for fp in file_paths:
+
             command = f'py .\\od.py up {fp} {virtualpath}'
 
             try:
@@ -123,8 +149,9 @@ def browser(subpath):
             except:
                 continue
     
+    total_size = get_total_size()
 
-    return render_template('index.html', files=files, folders=folders_to_show)
+    return render_template('index.html', files=files, folders=folders_to_show, total_size=total_size)
 
 # this function basicaly dont make folders, but make blank files with path to folder so it will show as empty folder
 @app.route('/createfolder', methods=["POST"])
@@ -195,7 +222,9 @@ def index():
         except:
             continue
 
-    return render_template('index.html', files=files, folders=folders_to_show)
+    total_size = get_total_size()
+
+    return render_template('index.html', files=files, folders=folders_to_show, total_size=total_size)
 
 @app.route('/download', methods=['GET'])
 def download():
