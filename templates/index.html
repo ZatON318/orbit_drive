@@ -143,6 +143,9 @@ body{
             <div class="menu-left">
                 <h2>Orbit-Drive v1.3</h2>
             </div>
+            <div class="menu-center">
+                {{total_size}}
+            </div>
             <div class="menu-right">
                 <i class="bi bi-folder-plus" onclick="customAction('create_folder')"></i>
             </div>
@@ -183,6 +186,13 @@ body{
         <div class="custom-menu-item" onclick="customAction('create_folder')">Create Folder</div>
         <div class="custom-menu-item" onclick="customAction('download_folder')">Download Folder</div>
         <div class="custom-menu-item" onclick="customAction('delete_folder')">Delete Folder</div>
+        <div class="custom-menu-item" onclick="customAction('close')">Close</div>
+        <!-- Add more menu items as needed -->
+    </div>
+
+    <div id="customMenuOverFile" class="custom-menu">
+        <div class="custom-menu-item" onclick="customAction('download_file')">Download File</div>
+        <div class="custom-menu-item" onclick="customAction('delete_file')">Delete File</div>
         <div class="custom-menu-item" onclick="customAction('close')">Close</div>
         <!-- Add more menu items as needed -->
     </div>
@@ -312,13 +322,18 @@ body{
 <script>
 
 var over_folder = false;
+var over_file = false;
 var over_folder_element = null
+var over_file_element = null
 
 document.addEventListener('contextmenu', function (e) {
     hideCustomMenu();
     e.preventDefault();
     if(over_folder){
         showCustomMenuOverFolder(e.pageX, e.pageY);
+    }
+    else if(over_file){
+        showCustomMenuOverFile(e.pageX, e.pageY);
     }
     else{
         showCustomMenu(e.pageX, e.pageY);
@@ -334,10 +349,20 @@ document.addEventListener('mouseover', function (e) {
     if (hoveredElement.classList.contains('folder')) {
         over_folder = true;
         over_folder_element = hoveredElement;
+        over_file = false;
+        over_file_element = null;
+    }
+    else if(hoveredElement.classList.contains('item')){
+        over_folder = false;
+        over_folder_element = null;
+        over_file = true;
+        over_file_element = hoveredElement;
     }
     else{
         over_folder = false;
         over_folder_element = null;
+        over_file = false;
+        over_file_element = null;
     }
 });
 
@@ -356,11 +381,21 @@ function showCustomMenuOverFolder(x, y) {
     customMenu.style.top = y + 'px';
 }
 
+function showCustomMenuOverFile(x, y) {
+    console.log(over_file_element);
+    var customMenu = document.getElementById('customMenuOverFile');
+    customMenu.style.display = 'block';
+    customMenu.style.left = x + 'px';
+    customMenu.style.top = y + 'px';
+}
+
 function hideCustomMenu() {
     var customMenu = document.getElementById('customMenu');
     customMenu.style.display = 'none';
     var customMenuOverFolder = document.getElementById('customMenuOverFolder');
     customMenuOverFolder.style.display = 'none';
+    var customMenuOverFile = document.getElementById('customMenuOverFile');
+    customMenuOverFile.style.display = 'none';
 }
 
 function customAction(action) {

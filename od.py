@@ -17,6 +17,17 @@ safe = int(os.environ.get("GROUP_CHAT_ID"))
 index_file = "./odrive_sync/files_index.json"
 stats_index = "./odrive_sync/stats_index.json"
 
+async def update_total_size(value_to_increase):
+    with open(stats_index, 'r') as file:
+        data = json.load(file)
+
+    data['total_size'] = data['total_size'] + value_to_increase
+
+    with open(stats_index, 'w') as file:
+        json.dump(data, file, indent=2)
+
+    print("Drive stats updated.")
+
 async def upload_file(file_path):
     
     total_size = os.path.getsize(file_path)
@@ -122,8 +133,10 @@ async def upload(file_path, file_virtual_pos):
                     "file_extension": ".7z",
                     "client_paths": f"{client_paths}",
                     "message_ids": f"{returnids}",
-                    "virtual_pos": f"{file_virtual_pos}"
+                    "virtual_pos": f"{file_virtual_pos}",
+                    "size": f"{file_size}"
                 }
+                await update_total_size(file_size)
 
                 try:
                     with open(index_file, 'r') as file:
@@ -151,8 +164,10 @@ async def upload(file_path, file_virtual_pos):
                         "file_extension": f"{file_extension}",
                         "client_path": f"{file_path}",
                         "message_id": f"{retid}",
-                        "virtual_pos": f"{file_virtual_pos}"
+                        "virtual_pos": f"{file_virtual_pos}",
+                        "size": f"{file_size}"
                 }
+                await update_total_size(file_size)
 
                 with open(index_file, 'r') as file:
                     existing_data = json.load(file)
