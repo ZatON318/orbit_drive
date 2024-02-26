@@ -107,6 +107,20 @@ body{
         z-index: 1000;
 }
 
+.modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #28282e;
+        color: aliceblue;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+}
+
 .menu-holder{
     width: 100%;
     background-color: #28282e;
@@ -162,10 +176,10 @@ body{
                         {% if file.file_extension == "blank"%}
                             style="display: none;"
                         {%else%}
-                            href="/download?file={{file.message_id}}" class="single-file"
+                            href="/download?file={{file.message_id}}" class="single-file" value="{{file.message_id}}"
                         {%endif%}
                     {%else%}
-                        href="/download?" class="multi-file" id="{{file.message_ids}}"
+                        href="/download?" class="multi-file" id="{{file.message_ids}}" value="{{file.message_ids}}"
                     {% endif %}
                 ><div class="item"><i class="bi bi-file-earmark-richtext-fill"></i> {{file.file_name}}{{file.file_extension}}</div></a>
             {% endfor %}
@@ -200,6 +214,11 @@ body{
     <div id="customModal">
         <input type="text" id="textInput" placeholder="Enter folder name">
         <button onclick="handleInput()">Create folder</button>
+    </div>
+
+    <div class="modal" id="customModalFileDelete">
+        <p>Delete this file ?</p>
+        <button onclick="handleFileDelete()">Delete</button>
     </div>
     
     
@@ -326,6 +345,8 @@ var over_file = false;
 var over_folder_element = null
 var over_file_element = null
 
+var file_to_delete = null
+
 document.addEventListener('contextmenu', function (e) {
     hideCustomMenu();
     e.preventDefault();
@@ -353,6 +374,8 @@ document.addEventListener('mouseover', function (e) {
         over_file_element = null;
     }
     else if(hoveredElement.classList.contains('item')){
+        file_to_delete = hoveredElement.parentNode.getAttribute("value");
+        console.log(file_to_delete);
         over_folder = false;
         over_folder_element = null;
         over_file = true;
@@ -398,6 +421,15 @@ function hideCustomMenu() {
     customMenuOverFile.style.display = 'none';
 }
 
+function showDeleteFileModal(){
+    var customModal = document.getElementById('customModalFileDelete');
+    customModal.style.display = 'block';
+}
+
+function handleFileDelete(){
+    console.log("deleting file" + id);
+}
+
 function customAction(action) {
     if (action == "close") {
         hideCustomMenu();
@@ -408,6 +440,10 @@ function customAction(action) {
     else if (action == "download_folder"){
         const currentPath = window.location.pathname;
         console.log('Current URL path:', currentPath);
+    }
+    else if (action == "delete_file"){
+        file_to_delete = 
+        showDeleteFileModal();
     }
     hideCustomMenu();
 }

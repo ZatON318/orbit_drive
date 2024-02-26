@@ -259,6 +259,25 @@ def download():
 
         return jsonify({'result': "error"})
 
+@app.route('/remove', methods=['GET'])
+def remove():
+    command = f'py .\\cleaner.py'
+    subprocess.run(command, shell=True)
+
+    files = request.args.getlist('file')
+
+    with open(json_path, 'r') as json_file:
+        data = json.load(json_file)
+
+    for f in files:
+        for item in data:
+            if item['message_id'] == f:
+                #data.remove(item)
+                print(item)
+                break
+
+    return jsonify({'result': "error"})
+
 @app.route('/static/css/<path:filename>')
 def serve_css(filename):
     return send_from_directory('static/css', filename)
