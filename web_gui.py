@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify, send_file, send_from_directory, redirect
 import json, ast, os
-import subprocess
-import platform
+import platform , sqlite3, subprocess
 
 
 app = Flask(__name__)
@@ -64,14 +63,21 @@ def save_files(files):
         file_paths.append(file_path)
     return file_paths
 
-def generate_filestructure(data):
+def generate_filestructure():
 
     structure = []
     splited_structure = []
 
-    for f in data:
-        if(f["virtual_pos"] not in structure):
-            structure.append(f["virtual_pos"])
+    conn = sqlite3.connect('files.db')
+    cur = conn.cursor()
+
+    cur.execute('SELECT * FROM files')
+    rows = cur.fetchall()
+
+    for row in rows:
+        structure.append(row[6])
+
+    conn.close()
 
     for f in structure:
         splited_folder = f.split("/")
@@ -115,11 +121,16 @@ def browser(subpath):
         return jsonify({'result': "jej"})
 
     files = []
-    with open(json_path, 'r') as json_file:
-        data = json.load(json_file)
+    conn = sqlite3.connect('files.db')
+    cur = conn.cursor()
 
-    for f in data:
-        if(f["virtual_pos"] == virtualpath):
+    cur.execute('SELECT * FROM files')
+    rows = cur.fetchall()
+
+    conn.close()
+
+    for f in rows:
+        if(f[6] == virtualpath):
             files.append(f)
 
     splited_subpath = subpath.split("/")
@@ -131,7 +142,7 @@ def browser(subpath):
 
     path_length = len(splited_subpath)
 
-    folders, splited_folders = generate_filestructure(data)
+    folders, splited_folders = generate_filestructure()
     folders_to_show = []
     for folder in splited_folders:
         if path_length <= 1:
@@ -159,29 +170,28 @@ def createfolder():
     if request.method == 'POST':
         foldername = request.json['foldername']
         path = request.json["url"]
-        print(f"creating folder {foldername}...")
+        #print(f"creating folder {foldername}...")
 
         virtual_path = path + foldername + "/"
-        print(virtual_path)
+        #print(virtual_path)
 
-        data = {
-                "type": "single",
-                "file_name": "blank",
-                "file_extension": "blank",
-                "client_path": "blank",
-                "message_id": "blank",
-                "virtual_pos": f"{virtual_path}"
-        }
+        conn = sqlite3.connect('files.db')
+        cur = conn.cursor()
 
-        print(data)
+        cur.execute('''
+            INSERT INTO files (type, file_name, file_extension, client_path, message_id, virtual_pos) VALUES (?, ?, ?, ?, ?, ?)
+        ''', ("single", "blank", "blank", "blank", "blank", virtual_path))
 
-        with open(json_path, 'r') as file:
-            existing_data = json.load(file)
+        conn.commit()
+        conn.close()
 
-        existing_data.append(data)
+        #with open(json_path, 'r') as file:
+            #existing_data = json.load(file)
 
-        with open(json_path, 'w') as file:
-            json.dump(existing_data, file, indent=2)
+        #existing_data.append(data)
+
+        #with open(json_path, 'w') as file:
+            #json.dump(existing_data, file, indent=2)
 
         return jsonify({'result': "pixi"})
     
@@ -206,14 +216,19 @@ def index():
         return jsonify({'result': "jej"})
     
     files = []
-    with open(json_path, 'r') as json_file:
-        data = json.load(json_file)
+    conn = sqlite3.connect('files.db')
+    cur = conn.cursor()
 
-    for f in data:
-        if(f["virtual_pos"] == virtualpath):
+    cur.execute('SELECT * FROM files')
+    rows = cur.fetchall()
+
+    conn.close()
+
+    for f in rows:
+        if(f[6] == virtualpath):
             files.append(f)
     
-    folders, splited_folders = generate_filestructure(data)
+    folders, splited_folders = generate_filestructure()
     folders_to_show = []
     for folder in splited_folders:
         try:

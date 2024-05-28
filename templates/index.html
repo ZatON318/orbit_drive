@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='logo_orbitdrive.jpg') }}" type="image/png">
     <title>Orbit-Drive</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- DaisyUI CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.11.1/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         html{
     height: 100%;
@@ -15,7 +20,6 @@ body{
     margin: 0px;
     min-height: 95%;
     padding: 0px;
-    background-color: rgb(46, 49, 51);
 }
 
 .table-holder{
@@ -24,7 +28,6 @@ body{
     display: flex;
     flex-direction: column;
     justify-content: center;
-    background-color: rgb(52, 59, 63);
     border-radius: 10px;
     padding: 10px;
 }
@@ -69,8 +72,6 @@ body{
     font-weight: bold;
     cursor: pointer;
     text-decoration: none;
-
-    color: aliceblue;
 }
 
 #drop-area {
@@ -84,12 +85,10 @@ body{
 
 .multi-file{
     text-decoration: none;
-    color: aliceblue;
 }
 
 .single-file{
     text-decoration: none;
-    color: aliceblue;
 }
 
 .custom-menu {
@@ -109,14 +108,10 @@ body{
 #customModal {
         display: none;
         position: fixed;
-        top: 50%;
+        top: 45%;
         left: 50%;
         transform: translate(-50%, -50%);
-        background-color: #28282e;
-        color: aliceblue;
-        border-radius: 5px;
         padding: 20px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         z-index: 1000;
 }
 
@@ -136,12 +131,11 @@ body{
 
 .menu-holder{
     width: 100%;
-    background-color: #28282e;
     margin-bottom: 10px;
 }
 
 .menu{
-    width: 80%;
+    width: 100%;
     margin: auto;
     height: 50px;
     display: flex;
@@ -165,67 +159,93 @@ body{
     </style>
 </head>
 <body>
-    <div class="menu-holder">
-        <div class="menu">
-            <div class="menu-left">
-                <h2>Orbit-Drive v1.3</h2>
-            </div>
-            <div class="menu-center">
-                {{total_size}}
-            </div>
-            <div class="menu-right">
-                <i class="bi bi-folder-plus" onclick="customAction('create_folder')"></i>
-            </div>
+    <div class="navbar bg-base-100">
+        <div class="flex-1">
+          <a href="/"><img src="{{ url_for('static', filename='logo_orbitdrive.jpg') }}" style="width: 50px; height: auto;"/></a>
+          <a class="btn btn-ghost text-xl" href="/">Orbit drive</a>
         </div>
+        <div class="flex-none">
+          <ul class="menu menu-horizontal px-1">
+            <p>{{total_size}}</p>
+            <li class=" mr-5 ml-5" onclick="customAction('create_folder')"><a><i class="bi bi-folder-plus" ></i></a></li>
+          </ul>
+        </div>
+      </div>
+
+
+    <div class="flex flex-row justify-center items-center gap-5 flex-wrap">
+
+        <a href="/" id="upfolder">
+            <div class="card w-48 bg-base-100 p-5 hover:ease-out duration-300 hover:bg-base-200">
+                <div class="flex justify-center items-center">
+                    <i class="bi bi-arrow-90deg-up text-5xl"></i>
+                </div>
+                <div class="flex justify-center items-center">
+                    <h2 class="card-title">Back</h2>
+                </div>
+            </div>
+        </a>
+
+        {% for folder in folders %}
+            <a href="{{folder}}/" class="folder">
+                <div class="card w-48 bg-base-100 p-5 hover:ease-out duration-300 hover:bg-base-200">
+                    <div class="flex justify-center items-center">
+                        <i class="bi bi-folder-fill text-5xl"></i>
+                    </div>
+                    <div class="flex justify-center items-center">
+                        <h2 class="card-title">{{ folder }}</h2>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+
     </div>
 
-    <div class="table-holder">
-        <div class="table">
-            <a id="upfolder" href="/" style="text-decoration: none;"><div class="folder item" ><i class="bi bi-folder-fill"></i>..</div></a>
-            {% for folder in folders %}
-                <a href="{{folder}}/" style="text-decoration: none;"><div class="folder item" ><i class="bi bi-folder-fill"></i> {{ folder }}</div></a>
-            {% endfor %}
-            {% for file in files %}
-                <div  {% if file.type == "single" %}
-                        {% if file.file_extension == "blank"%}
-                            style="display: none;"
-                        {%else%}
-                            href="/download?file={{file.message_id}}" class="single-file item" value="{{file.message_id}}"
-                        {%endif%}
+    <div class="flex flex-row justify-center items-center gap-5 flex-wrap">
+
+        {% for file in files %}
+            <!--<a href="/qwerty">Vymazať</a> <a href="/asdf">Stiahnuť</a> </div> </div>-->
+            <a {% if file.1 == "single" %}
+                    {% if file.3 == "blank"%}
+                        style="display: none;"
                     {%else%}
-                        href="/download?" class="multi-file item" id="{{file.message_ids}}" value="{{file.message_ids}}"
-                    {% endif %}
-                ><div class="item_left"><i class="bi bi-file-earmark-richtext-fill"></i> {{file.file_name}}{{file.file_extension}}</div><div class="item_right"> <a href="/qwerty">Vymazať</a> <a href="/asdf">Stiahnuť</a> </div> </div>
-            {% endfor %}
-        </div>
+                        href="/download?file={{file.5}}" class="single-file" value="{{file.5}}"
+                    {%endif%}
+                {%else%}
+                    href="/download?" class="multi-file" id="{{file.9}}" value="{{file.9}}"
+                {% endif %}>
+                <div class="card w-48 bg-base-100 p-5 hover:ease-out duration-300 hover:bg-base-200">
+                    <div class="flex justify-center items-center">
+                        <i class="bi bi-file-earmark-richtext-fill text-5xl"></i>
+                    </div>
+                    <div class="flex justify-center items-center">
+                        <h2 class="card-title">{{file.2}}{{file.3}}</h2>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+
     </div>
+
 
     <div id="drop-area" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
         <p>Drag & Drop files here</p>
       </div>
 
-      <!--<div id="customMenu" class="custom-menu">
-        <div class="custom-menu-item" onclick="customAction('create_folder')">Create Folder</div>
-        <div class="custom-menu-item" onclick="customAction('close')">Close</div>
-    </div>
-
-    <div id="customMenuOverFolder" class="custom-menu">
-        <div class="custom-menu-item" onclick="customAction('create_folder')">Create Folder</div>
-        <div class="custom-menu-item" onclick="customAction('download_folder')">Download Folder</div>
-        <div class="custom-menu-item" onclick="customAction('delete_folder')">Delete Folder</div>
-        <div class="custom-menu-item" onclick="customAction('close')">Close</div>
-        
-    </div>
-
-    <div id="customMenuOverFile" class="custom-menu">
-        <div class="custom-menu-item" onclick="customAction('download_file')">Download File</div>
-        <div class="custom-menu-item" onclick="customAction('delete_file')">Delete File</div>
-        <div class="custom-menu-item" onclick="customAction('close')">Close</div>
-    </div>-->
-
     <div id="customModal">
-        <input type="text" id="textInput" placeholder="Enter folder name">
-        <button onclick="handleInput()">Create folder</button>
+        <div class="card w-96 h-72 bg-base-200 shadow-xl">
+            <div class=" flex justify-center items-center mt-10">
+                <i class="bi bi-folder-plus text-5xl"></i>
+            </div>
+            <div class="card-body flex flex-col justify-center items-center">
+              <h2 class="card-title">Create folder</h2>
+              <input type="text" id="textInput" class="input input-bordered w-full max-w-xs" placeholder="Enter folder name">
+              <div class="card-actions flex-row justify-end">
+                <button class="btn btn-primary" onclick="handleInput()">Create folder</button>
+                <button class="btn" onclick="hideCustomModal()">Cancel</button>
+              </div>
+            </div>
+          </div>
     </div>
 
     <div class="modal" id="customModalFileDelete">
@@ -352,95 +372,6 @@ body{
 
 <script>
 
-var over_folder = false;
-var over_file = false;
-var over_folder_element = null
-var over_file_element = null
-
-var file_to_delete = null
-
-document.addEventListener('contextmenu', function (e) {
-    hideCustomMenu();
-    e.preventDefault();
-    if(over_folder){
-        showCustomMenuOverFolder(e.pageX, e.pageY);
-    }
-    else if(over_file){
-        showCustomMenuOverFile(e.pageX, e.pageY);
-    }
-    else{
-        showCustomMenu(e.pageX, e.pageY);
-    }
-});
-
-document.addEventListener('click', function () {
-    hideCustomMenu();
-});
-
-document.addEventListener('mouseover', function (e) {
-    var hoveredElement = e.target;
-    if (hoveredElement.classList.contains('folder')) {
-        over_folder = true;
-        over_folder_element = hoveredElement;
-        over_file = false;
-        over_file_element = null;
-    }
-    else if(hoveredElement.classList.contains('item')){
-        file_to_delete = hoveredElement.parentNode.getAttribute("value");
-        console.log(file_to_delete);
-        over_folder = false;
-        over_folder_element = null;
-        over_file = true;
-        over_file_element = hoveredElement;
-    }
-    else{
-        over_folder = false;
-        over_folder_element = null;
-        over_file = false;
-        over_file_element = null;
-    }
-});
-
-function showCustomMenu(x, y) {
-    var customMenu = document.getElementById('customMenu');
-    customMenu.style.display = 'block';
-    customMenu.style.left = x + 'px';
-    customMenu.style.top = y + 'px';
-}
-
-function showCustomMenuOverFolder(x, y) {
-    console.log(over_folder_element);
-    var customMenu = document.getElementById('customMenuOverFolder');
-    customMenu.style.display = 'block';
-    customMenu.style.left = x + 'px';
-    customMenu.style.top = y + 'px';
-}
-
-function showCustomMenuOverFile(x, y) {
-    console.log(over_file_element);
-    var customMenu = document.getElementById('customMenuOverFile');
-    customMenu.style.display = 'block';
-    customMenu.style.left = x + 'px';
-    customMenu.style.top = y + 'px';
-}
-
-function hideCustomMenu() {
-    var customMenu = document.getElementById('customMenu');
-    customMenu.style.display = 'none';
-    var customMenuOverFolder = document.getElementById('customMenuOverFolder');
-    customMenuOverFolder.style.display = 'none';
-    var customMenuOverFile = document.getElementById('customMenuOverFile');
-    customMenuOverFile.style.display = 'none';
-}
-
-function showDeleteFileModal(){
-    var customModal = document.getElementById('customModalFileDelete');
-    customModal.style.display = 'block';
-}
-
-function handleFileDelete(){
-    console.log("deleting file" + id);
-}
 
 function customAction(action) {
     if (action == "close") {
